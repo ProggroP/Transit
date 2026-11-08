@@ -17,8 +17,9 @@ module.exports = [
         "type": "select",
         "messageKey": "THEME",
         "label": "Colour theme",
-        "defaultValue": "0",
+        "defaultValue": "6",
         "options": [
+          { "label": "Transit (yellow on red)", "value": "6" },
           { "label": "Classic Amber",        "value": "0" },
           { "label": "Neon Green",           "value": "1" },
           { "label": "High-Contrast Cyan",   "value": "2" },
@@ -36,7 +37,8 @@ module.exports = [
           { "label": "Date (MON 14)",        "value": "0" },
           { "label": "Steps",                "value": "1" },
           { "label": "Heart rate",           "value": "2" },
-          { "label": "Low / high temperature", "value": "3" }
+          { "label": "Low / high temperature", "value": "3" },
+          { "label": "Off (time fills the screen)", "value": "4" }
         ]
       },
       {

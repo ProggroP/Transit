@@ -1,65 +1,82 @@
-// Transit -- Watchface im Stil einer Flip-Dot- bzw. Segmentanzeige.
+// Transit -- Watchface im Stil einer Kachel-Anzeige.
 //
-// Zwei grosse Ziffernpaare untereinander: oben die Stunden, darunter die
-// Minuten. Die dritte Zeile zeigt je nach Einstellung Datum, Schritte,
-// Herzfrequenz oder Tiefst-/Hoechsttemperatur. Alle Zeichen sind als
-// 5x7-Punktmatrix im Code hinterlegt; benachbarte Punkte werden zu
-// Segmenten verschmolzen, damit die Anzeige wie die Vorlage aussieht.
+// Zwei Ziffernpaare untereinander: oben die Stunden, darunter die Minuten. Die
+// dritte Zeile zeigt je nach Einstellung Datum, Schritte, Herzfrequenz oder
+// Tiefst-/Hoechsttemperatur, oder sie ist aus und die Zeit fuellt die Hoehe.
+//
+// Jedes Zeichen sitzt auf einer farbigen Platte und besteht aus 3 x 5
+// quadratischen Kacheln. Eine Kachel ist leer, voll, an einer Ecke gerundet
+// oder eine Dreiecksform (Zeichensatz siehe GLYPHS). Zwischen den Kacheln
+// scheint die Platte als feine Rasterlinie durch.
 
 #include <pebble.h>
 
 // ---- Farben ----------------------------------------------------------------
-// Die gewuenschten Farben sind auf die 64-Farben-Palette des Pebble gemappt.
-// Ein GColor8 hat je Kanal zwei Bit; die Kommentare nennen den Palettenwert.
-//   Classic Amber        #FF9900 -> ChromeYellow #FFAA00, Platte Schwarz
-//   Neon Green          #00FF41 -> Malachite    #00FF55, Platte Schwarz
-//   High-Contrast Cyan  #00E5FF -> Cyan         #00FFFF, Platte OxfordBlue
-//   Bi-Color Flip Dot   #E6E65C -> Icterine     #FFFF55, Platte DarkGray
-//   Monochrome White    #FFFFFF -> White,               Platte Schwarz
-//   Monochrome Inverse  #202020 -> Schwarz,             Platte LightGray
-#define THEME_COUNT 6
+// Die Wunschfarben sind auf die 64-Farben-Palette gemappt. Der Bildschirm um
+// die Platten bleibt schwarz wie in der Vorlage. Wo die naechste Palettenfarbe
+// der Platte Schwarz waere, die Vorgabe aber eine sichtbare Platte meint
+// (Schwarzgrau, Anthrazit), steht DarkGray, sonst waeren die Platten unsichtbar.
+//   Transit             Gelb auf Rot, die Farben der Vorlage
+//   Classic Amber       #FF9900 -> ChromeYellow, Platte #1C1C1C -> DarkGray
+//   Neon Green          #00FF41 -> Malachite,    Platte #000000 -> Black
+//   High-Contrast Cyan  #00E5FF -> Cyan,         Platte #0A192F -> OxfordBlue
+//   Bi-Color Flip Dot   #E6E65C -> Icterine,     Platte #2B2B2B -> DarkGray
+//   Monochrome White    #FFFFFF -> White,        Platte #222222 -> DarkGray
+//   Monochrome Inverse  #202020 -> Black,        Platte #D0D0D0 -> LightGray
+#define THEME_COUNT    7
+#define THEME_DEFAULT  6
+#define COLOR_SCREEN   GColorBlack
 
 typedef struct {
   GColor fg;
-  GColor bg;
+  GColor plate;
 } Theme;
 
 static const Theme THEMES[THEME_COUNT] = {
-  { {GColorChromeYellowARGB8}, {GColorBlackARGB8} },
+  { {GColorChromeYellowARGB8}, {GColorDarkGrayARGB8} },
   { {GColorMalachiteARGB8},    {GColorBlackARGB8} },
   { {GColorCyanARGB8},         {GColorOxfordBlueARGB8} },
   { {GColorIcterineARGB8},     {GColorDarkGrayARGB8} },
-  { {GColorWhiteARGB8},        {GColorBlackARGB8} },
+  { {GColorWhiteARGB8},        {GColorDarkGrayARGB8} },
   { {GColorBlackARGB8},        {GColorLightGrayARGB8} },
+  { {GColorYellowARGB8},       {GColorRedARGB8} },
 };
 
 // ---- Layout ----------------------------------------------------------------
-// Auf Emery ist das Display rechteckig, auf Gabbro rund. Dort sind die
-// Ziffern etwas groesser, der Block sitzt aber etwas tiefer, damit die oberen
-// Ecken im Kreis bleiben.
+// Die Kacheln bleiben quadratisch, die Groesse ergibt sich also aus der Hoehe.
+// Auf Gabbro muessen die Plattenecken zusaetzlich im Kreis bleiben.
 #ifdef PBL_PLATFORM_EMERY
-#define CELL_BIG        11
-#define DIGIT_GAP       20
-#define ROW_GAP         18
-#define INFO_GAP        12
-#define BLOCK_OFFSET_Y   0
+#define CELL_BIG        16      // Zeit, wenn die dritte Zeile an ist
+#define CELL_FULL       21      // Zeit, wenn die dritte Zeile aus ist
+#define INFO_MAX_W     190
 #else
-#define CELL_BIG        12
-#define DIGIT_GAP       22
-#define ROW_GAP         16
-#define INFO_GAP        10
-#define BLOCK_OFFSET_Y   4
+#define CELL_BIG        16
+#define CELL_FULL       20
+#define INFO_MAX_W     146      // Kreissehne auf Hoehe der dritten Zeile
 #endif
 
-#define GLYPH_COLS       5
-#define GLYPH_ROWS       7
-#define INFO_CELL        2
-#define AMPM_GAP         8
+#define CELL_INFO        6      // Kachelgroesse der dritten Zeile
+#define CELL_INFO_MIN    4      // Untergrenze, falls der Text sonst nicht passt
+#define CELL_AMPM        4
+
+#define GRID             1      // Rasterlinie zwischen den Kacheln und zum Rand
+#define PLATE_W(c)      (3 * (c) + 4 * GRID)
+#define PLATE_H(c)      (5 * (c) + 6 * GRID)
+
+#define GAP_DIGIT        6      // zwischen den grossen Platten, waagerecht und senkrecht
+#define GAP_INFO         5      // zwischen Minutenzeile und dritter Zeile
+#define GAP_INFO_CHAR    2      // zwischen den Platten der dritten Zeile
+#define GAP_AMPM         4
+#define INFO_SPACE_W     8      // Leerzeichen in der dritten Zeile
 
 // ---- Daten ----------------------------------------------------------------
 #define WEATHER_INTERVAL_MIN 30
 #define WEATHER_STALE_SEC    (2 * 60 * 60)
 
+#define DEMO_HOUR        23
+#define DEMO_MINUTE      46
+#define DEMO_WDAY        1      // Montag
+#define DEMO_MDAY        14
 #define DEMO_STEPS       8642
 #define DEMO_HEART       72
 #define DEMO_TEMP_MIN    4
@@ -86,6 +103,7 @@ typedef enum {
   INFO_STEPS,
   INFO_HEART,
   INFO_TEMP,
+  INFO_OFF,
   INFO_COUNT
 } InfoMode;
 
@@ -105,140 +123,164 @@ static time_t s_temp_time;      // 0 = noch nie empfangen
 static bool s_demo;
 
 // ---------------------------------------------------------------------------
-// Zeichensatz: 5 Spalten x 7 Zeilen, Bit 4 ist die linke Spalte.
+// Zeichensatz: je 5 Zeilen zu 3 Kacheln.
+//   .  leer             #  voll
+//   q w e r   volle Kachel, Ecke oben links/oben rechts/unten links/unten rechts rund
+//   a b c d   Dreieck, gefuellt unten rechts/unten links/oben links/oben rechts
+//   > < ^ v   volle Kachel mit Kerbe von rechts/links/oben/unten bis zur Mitte
+//   L V A     nur das Kerbendreieck: von rechts/oben/unten bis zur Mitte
+//   k         volle Kachel, flacher Schnitt oben rechts (Bein des K)
+//   n m N M   steile Flanken des V: oben links/oben rechts/unten links/unten rechts
 // ---------------------------------------------------------------------------
-static const uint8_t GLYPH_DIGITS[10][GLYPH_ROWS] = {
-  {0x0E,0x11,0x13,0x15,0x19,0x11,0x0E}, // 0
-  {0x04,0x0C,0x04,0x04,0x04,0x04,0x0E}, // 1
-  {0x0E,0x11,0x01,0x06,0x08,0x10,0x1F}, // 2
-  {0x0E,0x11,0x01,0x06,0x01,0x11,0x0E}, // 3
-  {0x02,0x06,0x0A,0x12,0x1F,0x02,0x02}, // 4
-  {0x1F,0x10,0x1E,0x01,0x01,0x11,0x0E}, // 5
-  {0x06,0x08,0x10,0x1E,0x11,0x11,0x0E}, // 6
-  {0x1F,0x01,0x02,0x04,0x08,0x08,0x08}, // 7
-  {0x0E,0x11,0x11,0x0E,0x11,0x11,0x0E}, // 8
-  {0x0E,0x11,0x11,0x0F,0x01,0x02,0x0C}, // 9
+static const char GLYPHS_DIGIT[10][16] = {
+  "q#w" "#.#" "#.#" "#.#" "e#r",  // 0, bewusst wie O: liest sich besser als die Null mit Schraegstrich
+  "a#." ".#." ".#." ".#." ".#.",  // 1
+  "q#w" "..#" "a#c" "#.." "###",  // 2
+  "q#w" "..#" ".#>" "..#" "e#r",  // 3
+  "#.#" "#.#" "d##" "..#" "..#",  // 4
+  "###" "#.." "d#b" "..#" "e#r",  // 5
+  "q#w" "#.." "##b" "#.#" "e#r",  // 6
+  "###" ".ac" "ac." "#.." "#..",  // 7
+  "q#w" "#.#" "<#>" "#.#" "e#r",  // 8
+  "q#w" "#.#" "d##" "..#" "e#r",  // 9
 };
 
-static const uint8_t GLYPH_LETTERS[26][GLYPH_ROWS] = {
-  {0x0E,0x11,0x11,0x1F,0x11,0x11,0x11}, // A
-  {0x1E,0x11,0x11,0x1E,0x11,0x11,0x1E}, // B
-  {0x0E,0x11,0x10,0x10,0x10,0x11,0x0E}, // C
-  {0x1E,0x11,0x11,0x11,0x11,0x11,0x1E}, // D
-  {0x1F,0x10,0x10,0x1E,0x10,0x10,0x1F}, // E
-  {0x1F,0x10,0x10,0x1E,0x10,0x10,0x10}, // F
-  {0x0E,0x11,0x10,0x17,0x11,0x11,0x0F}, // G
-  {0x11,0x11,0x11,0x1F,0x11,0x11,0x11}, // H
-  {0x0E,0x04,0x04,0x04,0x04,0x04,0x0E}, // I
-  {0x07,0x02,0x02,0x02,0x02,0x12,0x0C}, // J
-  {0x11,0x12,0x14,0x18,0x14,0x12,0x11}, // K
-  {0x10,0x10,0x10,0x10,0x10,0x10,0x1F}, // L
-  {0x11,0x1B,0x15,0x15,0x11,0x11,0x11}, // M
-  {0x11,0x11,0x19,0x15,0x13,0x11,0x11}, // N
-  {0x0E,0x11,0x11,0x11,0x11,0x11,0x0E}, // O
-  {0x1E,0x11,0x11,0x1E,0x10,0x10,0x10}, // P
-  {0x0E,0x11,0x11,0x11,0x15,0x12,0x0D}, // Q
-  {0x1E,0x11,0x11,0x1E,0x14,0x12,0x11}, // R
-  {0x0F,0x10,0x10,0x0E,0x01,0x01,0x1E}, // S
-  {0x1F,0x04,0x04,0x04,0x04,0x04,0x04}, // T
-  {0x11,0x11,0x11,0x11,0x11,0x11,0x0E}, // U
-  {0x11,0x11,0x11,0x11,0x11,0x0A,0x04}, // V
-  {0x11,0x11,0x11,0x15,0x15,0x15,0x0A}, // W
-  {0x11,0x11,0x0A,0x04,0x0A,0x11,0x11}, // X
-  {0x11,0x11,0x0A,0x04,0x04,0x04,0x04}, // Y
-  {0x1F,0x01,0x02,0x04,0x08,0x10,0x1F}, // Z
+static const char GLYPHS_ALPHA[26][16] = {
+  "q#w" "#.#" "###" "#.#" "#.#",  // A
+  "##w" "#.#" "##>" "#.#" "##r",  // B
+  "q#w" "#.." "#.." "#.." "e#r",  // C
+  "##w" "#.#" "#.#" "#.#" "##r",  // D
+  "###" "#.." "##." "#.." "###",  // E
+  "###" "#.." "##." "#.." "#..",  // F
+  "q#w" "#.." "#L#" "#.#" "e#r",  // G
+  "#.#" "#.#" "###" "#.#" "#.#",  // H
+  ".#." ".#." ".#." ".#." ".#.",  // I
+  "..#" "..#" "..#" "#.#" "e#r",  // J
+  "#.#" "#ac" "##k" "#.#" "#.#",  // K
+  "#.." "#.." "#.." "#.." "###",  // L
+  "#.#" "#^#" "#V#" "#.#" "#.#",  // M
+  "#.#" "#b#" "###" "#d#" "#.#",  // N
+  "q#w" "#.#" "#.#" "#.#" "e#r",  // O
+  "##w" "#.#" "##c" "#.." "#..",  // P
+  "q#w" "#.#" "#.#" "#db" "e#d",  // Q
+  "##w" "#.#" "##>" "#.#" "#.#",  // R
+  "q#w" "#.." "d#b" "..#" "e#r",  // S
+  "###" ".#." ".#." ".#." ".#.",  // T
+  "#.#" "#.#" "#.#" "#.#" "e#r",  // U
+  "#.#" "#.#" "#.#" "n#m" "N#M",  // V
+  "#.#" "#.#" "#A#" "#v#" "e.r",  // W
+  "#.#" "#.#" "<#>" "#.#" "#.#",  // X
+  "#.#" "#.#" "d^c" ".#." ".#.",  // Y
+  "###" ".ac" "ac." "#.." "###",  // Z
 };
 
-static const uint8_t GLYPH_SPACE[GLYPH_ROWS]  = {0,0,0,0,0,0,0};
-static const uint8_t GLYPH_SLASH[GLYPH_ROWS]  = {0x00,0x01,0x02,0x04,0x08,0x10,0x00};
-static const uint8_t GLYPH_DEGREE[GLYPH_ROWS] = {0x0C,0x12,0x12,0x0C,0x00,0x00,0x00};
-static const uint8_t GLYPH_DASH[GLYPH_ROWS]   = {0x00,0x00,0x00,0x1F,0x00,0x00,0x00};
+static const char GLYPH_BLANK[16] = "...............";
+static const char GLYPH_DASH[16]  = "..." "..." "###" "..." "...";
+static const char GLYPH_SLASH[16] = "..." "..a" ".ac" "ac." "c..";
 
-static const uint8_t *glyph_rows(char c) {
-  if (c >= '0' && c <= '9') return GLYPH_DIGITS[c - '0'];
-  if (c >= 'A' && c <= 'Z') return GLYPH_LETTERS[c - 'A'];
-  switch (c) {
-    case '/': return GLYPH_SLASH;
-    case '~': return GLYPH_DEGREE;   // Ersatzzeichen fuer das Grad-Symbol
-    case '-': return GLYPH_DASH;
-    default:  return GLYPH_SPACE;
+static const char *glyph_cells(char c) {
+  if (c >= '0' && c <= '9') return GLYPHS_DIGIT[c - '0'];
+  if (c >= 'A' && c <= 'Z') return GLYPHS_ALPHA[c - 'A'];
+  if (c == '-') return GLYPH_DASH;
+  if (c == '/') return GLYPH_SLASH;
+  return GLYPH_BLANK;
+}
+
+static int isqrt_int(int v) {
+  int r = 0;
+  while ((r + 1) * (r + 1) <= v) r++;
+  return r;
+}
+
+// Rechnet in halben Pixeln, damit der Bogen um die Pixelmitte symmetrisch bleibt.
+// Der Radius betraegt wie in der Vorlage drei Viertel der Kachel.
+static int corner_inset(int row, int c) {
+  int d = (3 * c) / 2;
+  int dy = d - 2 * row - 1;
+  if (dy <= 0) return 0;
+  return (d - isqrt_int(d * d - dy * dy) + 1) / 2;
+}
+
+// Eine Kachel wird zeilenweise als ein oder zwei waagerechte Spannen gefuellt.
+static void draw_cell(GContext *ctx, char type, int x, int y, int c) {
+  if (type == '.') return;
+  if (type == '#') {
+    graphics_fill_rect(ctx, GRect(x, y, c, c), 0, GCornerNone);
+    return;
+  }
+  for (int row = 0; row < c; row++) {
+    int flip = c - 1 - row;
+    int mid = row < flip ? row : flip;
+    int a0 = 0, b0 = c, a1 = 0, b1 = 0;
+    switch (type) {
+      case 'a': a0 = flip; break;
+      case 'b': b0 = row + 1; break;
+      case 'c': b0 = flip + 1; break;
+      case 'd': a0 = row; break;
+      case 'q': a0 = corner_inset(row, c); break;
+      case 'w': b0 = c - corner_inset(row, c); break;
+      case 'e': a0 = corner_inset(flip, c); break;
+      case 'r': b0 = c - corner_inset(flip, c); break;
+      case '>': b0 = c - mid; break;
+      case '<': a0 = mid; break;
+      case 'L': a0 = c - mid; break;
+      case '^':
+        if (row * 2 < c) { b0 = row; a1 = c - row; b1 = c; }
+        break;
+      case 'v':
+        if (flip * 2 < c) { b0 = flip; a1 = c - flip; b1 = c; }
+        break;
+      case 'V':
+        if (row * 2 < c) { a0 = row; b0 = c - row; } else { b0 = 0; }
+        break;
+      case 'A':
+        if (flip * 2 < c) { a0 = flip; b0 = c - flip; } else { b0 = 0; }
+        break;
+      case 'k': b0 = 2 * row + 1 < c ? 2 * row + 1 : c; break;
+      case 'n': a0 = row / 2; break;
+      case 'm': b0 = c - row / 2; break;
+      case 'N': a0 = (c + row) / 2; break;
+      case 'M': b0 = (c - row) / 2; break;
+      default: break;
+    }
+    if (b0 > a0) graphics_fill_rect(ctx, GRect(x + a0, y + row, b0 - a0, 1), 0, GCornerNone);
+    if (b1 > a1) graphics_fill_rect(ctx, GRect(x + a1, y + row, b1 - a1, 1), 0, GCornerNone);
   }
 }
 
-static bool row_bit(const uint8_t *rows, int r, int c) {
-  if (r < 0 || r >= GLYPH_ROWS || c < 0 || c >= GLYPH_COLS) return false;
-  return (rows[r] >> (GLYPH_COLS - 1 - c)) & 1;
-}
+// Platte und Kacheln eines Zeichens.
+static void draw_glyph(GContext *ctx, char ch, int x, int y, int c, const Theme *th) {
+  graphics_context_set_fill_color(ctx, th->plate);
+  graphics_fill_rect(ctx, GRect(x, y, PLATE_W(c), PLATE_H(c)), 0, GCornerNone);
 
-// Ein Zeichen besteht aus waagerechten und senkrechten Laeufen ab zwei
-// Punkten (volle Rundung) und einzelnen Punkten (schwache Rundung). So
-// verschmelzen die Punkte zu Segmenten wie in der Vorlage.
-static void draw_glyph(GContext *ctx, char c, int x, int y, int cell,
-                       GColor color) {
-  const uint8_t *rows = glyph_rows(c);
-  int radius_run = cell / 2;
-  int radius_dot = (cell * 3) / 10;
-  if (radius_dot < 1) radius_dot = 1;
-
-  graphics_context_set_fill_color(ctx, color);
-
-  for (int r = 0; r < GLYPH_ROWS; r++) {
-    int col = 0;
-    while (col < GLYPH_COLS) {
-      if (row_bit(rows, r, col) && row_bit(rows, r, col + 1)) {
-        int start = col;
-        while (col < GLYPH_COLS && row_bit(rows, r, col)) col++;
-        graphics_fill_rect(ctx,
-            GRect(x + start * cell, y + r * cell,
-                  (col - start) * cell, cell),
-            radius_run, GCornersAll);
-      } else {
-        col++;
-      }
+  const char *cells = glyph_cells(ch);
+  graphics_context_set_fill_color(ctx, th->fg);
+  for (int r = 0; r < 5; r++) {
+    for (int k = 0; k < 3; k++) {
+      draw_cell(ctx, cells[r * 3 + k],
+                x + GRID + k * (c + GRID), y + GRID + r * (c + GRID), c);
     }
   }
-
-  for (int col = 0; col < GLYPH_COLS; col++) {
-    int r = 0;
-    while (r < GLYPH_ROWS) {
-      if (row_bit(rows, r, col) && row_bit(rows, r + 1, col)) {
-        int start = r;
-        while (r < GLYPH_ROWS && row_bit(rows, r, col)) r++;
-        graphics_fill_rect(ctx,
-            GRect(x + col * cell, y + start * cell,
-                  cell, (r - start) * cell),
-            radius_run, GCornersAll);
-      } else {
-        r++;
-      }
-    }
-  }
-
-  for (int r = 0; r < GLYPH_ROWS; r++) {
-    for (int col = 0; col < GLYPH_COLS; col++) {
-      if (!row_bit(rows, r, col)) continue;
-      bool left   = row_bit(rows, r, col - 1);
-      bool right  = row_bit(rows, r, col + 1);
-      bool up     = row_bit(rows, r - 1, col);
-      bool down   = row_bit(rows, r + 1, col);
-      if (!left && !right && !up && !down) {
-        graphics_fill_rect(ctx,
-            GRect(x + col * cell, y + r * cell, cell, cell),
-            radius_dot, GCornersAll);
-      }
-    }
-  }
 }
 
-static int text_width(const char *s, int cell) {
-  int n = strlen(s);
-  return n ? (n * 6 - 1) * cell : 0;
-}
-
-static void draw_text(GContext *ctx, const char *s, int x, int y, int cell,
-                      GColor color) {
+// Leerzeichen sind in der dritten Zeile eine schmale Luecke ohne Platte.
+static int text_width(const char *s, int c) {
+  int w = 0;
   for (int i = 0; s[i]; i++) {
-    draw_glyph(ctx, s[i], x + i * 6 * cell, y, cell, color);
+    if (i) w += GAP_INFO_CHAR;
+    w += s[i] == ' ' ? INFO_SPACE_W : PLATE_W(c);
+  }
+  return w;
+}
+
+static void draw_text(GContext *ctx, const char *s, int x, int y, int c, const Theme *th) {
+  for (int i = 0; s[i]; i++) {
+    if (s[i] == ' ') {
+      x += INFO_SPACE_W + GAP_INFO_CHAR;
+    } else {
+      draw_glyph(ctx, s[i], x, y, c, th);
+      x += PLATE_W(c) + GAP_INFO_CHAR;
+    }
   }
 }
 
@@ -247,7 +289,7 @@ static void draw_text(GContext *ctx, const char *s, int x, int y, int cell,
 // ---------------------------------------------------------------------------
 static void settings_defaults(void) {
   s_settings.version = SETTINGS_VERSION;
-  s_settings.theme = 0;
+  s_settings.theme = THEME_DEFAULT;
   s_settings.info_mode = INFO_DATE;
 }
 
@@ -256,7 +298,7 @@ static void settings_load(void) {
   if (persist_exists(SETTINGS_KEY)) {
     persist_read_data(SETTINGS_KEY, &s_settings, sizeof(s_settings));
   }
-  if (s_settings.theme >= THEME_COUNT) s_settings.theme = 0;
+  if (s_settings.theme >= THEME_COUNT) s_settings.theme = THEME_DEFAULT;
   if (s_settings.info_mode >= INFO_COUNT) s_settings.info_mode = INFO_DATE;
 
   if (persist_exists(PKEY_TEMP_MIN))  s_temp_min  = persist_read_int(PKEY_TEMP_MIN);
@@ -296,7 +338,7 @@ static void info_text(struct tm *t, char *buf, size_t len) {
       int steps = s_demo ? DEMO_STEPS : health_today(HealthMetricStepCount);
       if (steps < 0) steps = 0;
       if (steps > 99999) steps = 99999;
-      snprintf(buf, len, "STEPS %d", steps);
+      snprintf(buf, len, "%d", steps);
       break;
     }
     case INFO_HEART: {
@@ -310,7 +352,7 @@ static void info_text(struct tm *t, char *buf, size_t len) {
                    time(NULL) - s_temp_time < WEATHER_STALE_SEC;
       char unit = s_wx_unit ? 'F' : 'C';
       if (s_demo) {
-        snprintf(buf, len, "%d/%d~%c", DEMO_TEMP_MIN, DEMO_TEMP_MAX, 'C');
+        snprintf(buf, len, "%d/%dC", DEMO_TEMP_MIN, DEMO_TEMP_MAX);
       } else if (fresh) {
         int lo = s_temp_min;
         int hi = s_temp_max;
@@ -318,15 +360,20 @@ static void info_text(struct tm *t, char *buf, size_t len) {
         if (lo > 999) lo = 999;
         if (hi < -99) hi = -99;
         if (hi > 999) hi = 999;
-        snprintf(buf, len, "%d/%d~%c", lo, hi, unit);
+        snprintf(buf, len, "%d/%d%c", lo, hi, unit);
       } else {
-        snprintf(buf, len, "--/--~%c", unit);
+        snprintf(buf, len, "--/--%c", unit);
       }
       break;
     }
+    case INFO_OFF:
+      buf[0] = '\0';
+      break;
     case INFO_DATE:
     default:
-      snprintf(buf, len, "%s %02d", DAYS[t->tm_wday], t->tm_mday);
+      snprintf(buf, len, "%s %02d",
+               DAYS[s_demo ? DEMO_WDAY : t->tm_wday],
+               s_demo ? DEMO_MDAY : t->tm_mday);
       break;
   }
 }
@@ -338,14 +385,16 @@ static void canvas_update(Layer *layer, GContext *ctx) {
   GRect b = layer_get_bounds(layer);
   const Theme *th = &THEMES[s_settings.theme];
 
-  graphics_context_set_fill_color(ctx, th->bg);
+  graphics_context_set_fill_color(ctx, COLOR_SCREEN);
   graphics_fill_rect(ctx, b, 0, GCornerNone);
 
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
-  bool h24 = clock_is_24h_style();
+  bool h24 = s_demo || clock_is_24h_style();
 
-  int hour = t->tm_hour;
+  int hour = s_demo ? DEMO_HOUR : t->tm_hour;
+  int minute = s_demo ? DEMO_MINUTE : t->tm_min;
+  bool pm = hour >= 12;
   if (!h24) {
     hour %= 12;
     if (hour == 0) hour = 12;
@@ -353,35 +402,39 @@ static void canvas_update(Layer *layer, GContext *ctx) {
 
   static char hour_buf[4];
   static char min_buf[4];
-  if (h24) snprintf(hour_buf, sizeof(hour_buf), "%02d", hour);
-  else     snprintf(hour_buf, sizeof(hour_buf), "%2d", hour);
-  snprintf(min_buf, sizeof(min_buf), "%02d", t->tm_min);
+  snprintf(hour_buf, sizeof(hour_buf), "%02d", hour);
+  snprintf(min_buf, sizeof(min_buf), "%02d", minute);
 
-  int gw = GLYPH_COLS * CELL_BIG;
-  int gh = GLYPH_ROWS * CELL_BIG;
-  int pair_w = 2 * gw + DIGIT_GAP;
-  int block_h = 2 * gh + ROW_GAP + INFO_GAP + GLYPH_ROWS * INFO_CELL;
+  bool show_info = s_settings.info_mode != INFO_OFF;
+  int c = show_info ? CELL_BIG : CELL_FULL;
+  int pw = PLATE_W(c);
+  int ph = PLATE_H(c);
+  int pair_w = 2 * pw + GAP_DIGIT;
+  int block_h = 2 * ph + GAP_DIGIT;
+  if (show_info) block_h += GAP_INFO + PLATE_H(CELL_INFO);
   int x0 = (b.size.w - pair_w) / 2;
-  int top = (b.size.h - block_h) / 2 + BLOCK_OFFSET_Y;
+  int top = (b.size.h - block_h) / 2;
 
-  draw_glyph(ctx, hour_buf[0], x0, top, CELL_BIG, th->fg);
-  draw_glyph(ctx, hour_buf[1], x0 + gw + DIGIT_GAP, top, CELL_BIG, th->fg);
+  draw_glyph(ctx, hour_buf[0], x0, top, c, th);
+  draw_glyph(ctx, hour_buf[1], x0 + pw + GAP_DIGIT, top, c, th);
 
-  int minute_y = top + gh + ROW_GAP;
-  draw_glyph(ctx, min_buf[0], x0, minute_y, CELL_BIG, th->fg);
-  draw_glyph(ctx, min_buf[1], x0 + gw + DIGIT_GAP, minute_y, CELL_BIG, th->fg);
+  int minute_y = top + ph + GAP_DIGIT;
+  draw_glyph(ctx, min_buf[0], x0, minute_y, c, th);
+  draw_glyph(ctx, min_buf[1], x0 + pw + GAP_DIGIT, minute_y, c, th);
 
   if (!h24) {
-    char ap = t->tm_hour < 12 ? 'A' : 'P';
-    draw_glyph(ctx, ap, x0 + pair_w + AMPM_GAP, top + CELL_BIG / 2,
-               INFO_CELL, th->fg);
+    draw_glyph(ctx, pm ? 'P' : 'A', x0 + pair_w + GAP_AMPM,
+               top + (ph - PLATE_H(CELL_AMPM)) / 2, CELL_AMPM, th);
   }
 
-  static char info[24];
-  info_text(t, info, sizeof(info));
-  int info_y = top + 2 * gh + ROW_GAP + INFO_GAP;
-  draw_text(ctx, info, (b.size.w - text_width(info, INFO_CELL)) / 2, info_y,
-            INFO_CELL, th->fg);
+  if (show_info) {
+    static char info[24];
+    info_text(t, info, sizeof(info));
+    int ic = CELL_INFO;
+    while (ic > CELL_INFO_MIN && text_width(info, ic) > INFO_MAX_W) ic--;
+    int info_y = minute_y + ph + GAP_INFO + (PLATE_H(CELL_INFO) - PLATE_H(ic)) / 2;
+    draw_text(ctx, info, (b.size.w - text_width(info, ic)) / 2, info_y, ic, th);
+  }
 }
 
 // ---------------------------------------------------------------------------

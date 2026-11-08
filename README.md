@@ -1,40 +1,43 @@
 # Transit
 
-*A split-flap transit display for your wrist, in six classic colour schemes.*
+*Big tiled digits on coloured plates, like a station display, in seven colour schemes.*
 
-<img src="screenshots/shot_emery_amber.png" alt="Emery"> <img src="screenshots/shot_gabbro_amber.png" alt="Gabbro">
+<img src="screenshots/shot_emery_transit.png" alt="Emery"> <img src="screenshots/shot_gabbro_transit.png" alt="Gabbro">
 
 A Pebble watchface (v1.0.0) for Pebble Time 2 (emery) and Pebble Round 2 (gabbro).
 
-Transit shows the hours and minutes as two big dot-matrix lines, with generous
-space between the digits so they stay readable at a glance. A third line can
-show the date, today's steps, your heart rate, or the day's low and high
-temperature.
+Transit shows the time as four big characters, each on its own coloured plate:
+two for the hours, two for the minutes. A third line can show the date, today's
+steps, your heart rate, or the day's low and high temperature. Switch the line
+off and the time grows to the full height of the screen.
 
-All characters are drawn in code as a 5x7 dot matrix. Neighbouring dots merge
-into segments, which gives the blocky, mechanical look of a flip-dot display
-without any image resources.
+Every character is built in code from a grid of 3 x 5 square tiles. A tile is
+empty, full, rounded at a corner or cut diagonally, and the plate shows through
+as a fine line between the tiles. There are no image or font resources.
 
 ## Features
 
-- Hours and minutes in a large 5x7 dot matrix, two digits per line.
-- Third line: date (MON 14), steps, heart rate, or low/high temperature.
-- Six colour themes mapped to Pebble's 64-colour palette:
-  - Classic Amber - amber on black.
+- Hours and minutes on large plates, with a clear gap between the characters.
+- Full tile alphabet A-Z, digits and the characters - and /.
+- Third line: date (MON 14), steps, heart rate, low/high temperature, or off.
+- With the third line off, the time fills the height of the screen.
+- Seven colour themes mapped to Pebble's 64-colour palette, on a black screen:
+  - Transit - yellow on red.
+  - Classic Amber - amber on dark grey.
   - Neon Green - bright green on black.
   - High-Contrast Cyan - cyan on dark navy.
   - Bi-Color Flip Dot - lemon yellow on dark grey.
-  - Monochrome White - white on black.
-  - Monochrome Inverse - graphite on light grey.
-- 12 or 24 hour format follows the watch setting; 12 hour mode shows a small
-  A or P marker.
+  - Monochrome White - white on dark grey.
+  - Monochrome Inverse - black on light grey.
+- 12 or 24 hour format follows the watch setting; 12 hour mode adds a small
+  A or P plate.
 - Layout adapts to the rectangular Emery and the round Gabbro screen.
 - Settings are applied live from the phone and persist across restarts.
 
 ## Settings
 
-- **Colour theme** - one of the six schemes above.
-- **Third line** - date, steps, heart rate, or low/high temperature.
+- **Colour theme** - one of the seven schemes above.
+- **Third line** - date, steps, heart rate, low/high temperature, or off.
 - **Temperature unit** - automatic (phone region), Celsius or Fahrenheit.
 
 Heart rate needs a watch with a heart-rate sensor; Pebble Round 2 shows `--`
@@ -63,11 +66,16 @@ MIT, see [LICENSE](LICENSE).
 
 ## Status
 
-- v1.0.0: Dot-matrix time, six themes, date/steps/heart/temperature line and
-  Clay settings implemented for emery and gabbro.
-- Store copy, three screenshot presets and icons are in place.
+- v1.0.0: Tile glyphs, plates, seven themes, third line with off switch and
+  Clay settings are implemented for emery and gabbro. Not published yet.
+- Glyphs are data in `GLYPHS_DIGIT` and `GLYPHS_ALPHA` in `src/c/transit.c`.
+  The digit 0 uses the shape of the letter O on purpose, for readability.
+- Tiles stay square, so with the third line off the time fills the height of
+  Emery but leaves black margins left and right.
+- The palette looks washed out on the panel: yellow turns cream, amber turns
+  salmon. There is no stronger yellow or amber in the palette.
 - Live weather could not be verified in the emulator: pypkjs geolocation
-  stalls, so the store screenshots use the built-in demo values. The watch
-  itself asks for weather through the phone's location; the request path is
-  unchanged from other projects that use Open-Meteo.
+  stalls, so the store screenshots use the built-in demo values. The cyan
+  preset has to stay last in `presets.json`, otherwise the next preset times
+  out.
 - Open: publish to the Rebble App Store.
