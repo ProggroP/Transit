@@ -1,0 +1,52 @@
+Transit - Rebble App Store listing
+
+Wird bei jeder Veroeffentlichung mit aktualisiert. Englisch, reiner Text,
+jeder Absatz und jeder Listenpunkt auf EINER Zeile (der Store uebernimmt
+Umbrueche woertlich). Pruefen mit .\pb.ps1 finish transit
+
+-------------------------------------------------------------------------
+
+TITLE
+
+Transit
+
+
+TAGLINE
+
+A split-flap transit display for your wrist, in six classic colour schemes.
+
+
+DESCRIPTION
+
+Transit brings the look of an airport or station departure board to Pebble: two big dot-matrix lines for the hours and minutes, with generous space between the digits so they stay readable at a glance.
+
+All characters are drawn in code as a 5x7 dot matrix; neighbouring dots merge into segments, giving the blocky, mechanical look of a flip-dot display without any image resources.
+
+A third line can show the date (MON 14), today's steps, your heart rate, or the day's low and high temperature. Choose the colour theme and the third line in the settings on your phone.
+
+Transit is built for Pebble Time 2 and Pebble Round 2. The layout adapts to the rectangular and the round screen, and the hours follow the watch's 12 or 24 hour setting (with a small A or P marker in 12 hour mode).
+
+
+SETTINGS
+
+- Colour theme - Classic Amber, Neon Green, High-Contrast Cyan, Bi-Color Flip Dot, Monochrome White or Monochrome Inverse.
+- Third line - date, steps, heart rate, or low and high temperature.
+- Temperature unit - automatic (phone region), Celsius or Fahrenheit.
+
+Heart rate needs a watch with a heart-rate sensor; Pebble Round 2 shows -- for that line.
+
+Low and high temperature come from Open-Meteo.com for your current location, updated every 30 minutes.
+
+12 or 24 hour format follows the watch setting.
+
+
+CATEGORY
+
+Watchfaces
+
+
+RELEASE NOTES
+
+1.0.0
+
+First release.

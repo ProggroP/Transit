@@ -1,0 +1,7 @@
+{
+  "presets": [
+    { "name": "amber", "settings": { "DEMO": 1, "THEME": 0, "INFO_MODE": 0 } },
+    { "name": "green", "settings": { "DEMO": 1, "THEME": 1, "INFO_MODE": 1 } },
+    { "name": "cyan",  "settings": { "DEMO": 1, "THEME": 2, "INFO_MODE": 3 } }
+  ]
+}

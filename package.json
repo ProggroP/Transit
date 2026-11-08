@@ -1,0 +1,45 @@
+{
+    "author": "Axel Kark",
+    "dependencies": {
+        "@rebble/clay": "1.0.8"
+    },
+    "keywords": [
+        "pebble-app",
+        "watchface",
+        "transit"
+    ],
+    "name": "transit",
+    "pebble": {
+        "capabilities": [
+            "configurable",
+            "health",
+            "location"
+        ],
+        "displayName": "Transit",
+        "enableMultiJS": true,
+        "messageKeys": [
+            "THEME",
+            "INFO_MODE",
+            "TEMP_UNIT",
+            "TEMP_MIN",
+            "TEMP_MAX",
+            "WX_UNIT",
+            "REQUEST_WEATHER",
+            "DEMO"
+        ],
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "emery",
+            "gabbro"
+        ],
+        "uuid": "a7b9d824-294f-4c63-8437-08fb2472df2a",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.0.0"
+}
