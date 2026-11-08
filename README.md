@@ -67,7 +67,8 @@ MIT, see [LICENSE](LICENSE).
 ## Status
 
 - v1.0.0: Tile glyphs, plates, seven themes, third line with off switch and
-  Clay settings are implemented for emery and gabbro. Not published yet.
+  Clay settings are implemented for emery and gabbro. Published on the
+  [Rebble App Store](https://apps.rePebble.com/6b1e297baa0b49d993f715c6).
 - Glyphs are data in `GLYPHS_DIGIT` and `GLYPHS_ALPHA` in `src/c/transit.c`.
   The digit 0 uses the shape of the letter O on purpose, for readability.
 - Tiles stay square, so with the third line off the time fills the height of
@@ -78,4 +79,4 @@ MIT, see [LICENSE](LICENSE).
   stalls, so the store screenshots use the built-in demo values. The cyan
   preset has to stay last in `presets.json`, otherwise the next preset times
   out.
-- Open: publish to the Rebble App Store.
+- Open: test live weather and the Clay settings page on a real watch and phone.
