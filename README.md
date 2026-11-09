@@ -77,10 +77,13 @@ MIT, see [LICENSE](LICENSE).
 - v1.1.0: Adds the Custom theme (theme index 7, keys `CUSTOM_SCREEN`,
   `CUSTOM_PLATE`, `CUSTOM_FG`). `src/pkjs/custom-clay.js` shows the three colour
   pickers only for that theme. Built with SDK 4.44, with `usesPermissions` for
-  location and Open-Meteo.
-- v1.0.0: Tile glyphs, plates, seven themes, third line with off switch and
-  Clay settings for emery and gabbro. Published on the
+  location and Open-Meteo. Published on the
   [Rebble App Store](https://apps.rePebble.com/6b1e297baa0b49d993f715c6).
+- v1.0.0: Tile glyphs, plates, seven themes, third line with off switch and
+  Clay settings for emery and gabbro.
+- The store listing text still describes v1.0.0: `pebble publish` only sets it
+  when the app is created. `cloudpebble/description.txt` has the current text
+  for the dashboard.
 - Glyphs are data in `GLYPHS_DIGIT` and `GLYPHS_ALPHA` in `src/c/transit.c`.
   The digit 0 uses the shape of the letter O on purpose, for readability.
 - Tiles stay square, so with the third line off the time fills the height of
