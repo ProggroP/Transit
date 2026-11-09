@@ -25,8 +25,27 @@ module.exports = [
           { "label": "High-Contrast Cyan",   "value": "2" },
           { "label": "Bi-Color Flip Dot",    "value": "3" },
           { "label": "Monochrome White",     "value": "4" },
-          { "label": "Monochrome Inverse",   "value": "5" }
+          { "label": "Monochrome Inverse",   "value": "5" },
+          { "label": "Custom",               "value": "7" }
         ]
+      },
+      {
+        "type": "color",
+        "messageKey": "CUSTOM_SCREEN",
+        "label": "Background",
+        "defaultValue": "000000"
+      },
+      {
+        "type": "color",
+        "messageKey": "CUSTOM_PLATE",
+        "label": "Plates",
+        "defaultValue": "FF0000"
+      },
+      {
+        "type": "color",
+        "messageKey": "CUSTOM_FG",
+        "label": "Digits and letters",
+        "defaultValue": "FFFF00"
       },
       {
         "type": "select",

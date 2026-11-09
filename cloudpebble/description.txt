@@ -13,7 +13,7 @@ Transit
 
 TAGLINE
 
-Big tiled digits on coloured plates, like a station display, in seven colour schemes.
+Big tiled digits on coloured plates, like a station display, in seven colour schemes or your own.
 
 
 DESCRIPTION
@@ -24,12 +24,15 @@ Every character is built from a grid of 3 x 5 square tiles. A tile is full, empt
 
 A third line can show the date (MON 14), today's steps, your heart rate, or the day's low and high temperature. Switch the line off and the time grows to the full height of the screen.
 
+Pick one of seven colour schemes, or choose Custom and set the background, the plates and the digits and letters yourself.
+
 Transit is built for Pebble Time 2 and Pebble Round 2. The layout adapts to the rectangular and the round screen, and the hours follow the watch's 12 or 24 hour setting (with a small A or P plate in 12 hour mode).
 
 
 SETTINGS
 
-- Colour theme - Transit (yellow on red), Classic Amber, Neon Green, High-Contrast Cyan, Bi-Color Flip Dot, Monochrome White or Monochrome Inverse.
+- Colour theme - Transit (yellow on red), Classic Amber, Neon Green, High-Contrast Cyan, Bi-Color Flip Dot, Monochrome White, Monochrome Inverse or Custom.
+- Background, Plates, Digits and letters - your own colours, shown when the colour theme is Custom.
 - Third line - date, steps, heart rate, low and high temperature, or off, which lets the time fill the screen.
 - Temperature unit - automatic (phone region), Celsius or Fahrenheit.
 
@@ -46,6 +49,10 @@ Watchfaces
 
 
 RELEASE NOTES
+
+1.1.0
+
+New Custom colour theme: choose the background, the plates and the digits and letters yourself.
 
 1.0.0
 

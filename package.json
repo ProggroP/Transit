@@ -25,7 +25,10 @@
             "TEMP_MAX",
             "WX_UNIT",
             "REQUEST_WEATHER",
-            "DEMO"
+            "DEMO",
+            "CUSTOM_SCREEN",
+            "CUSTOM_PLATE",
+            "CUSTOM_FG"
         ],
         "projectType": "native",
         "resources": {
@@ -36,10 +39,21 @@
             "emery",
             "gabbro"
         ],
+        "usesPermissions": [
+                "Location",
+                {
+                        "name": "Internet",
+                        "parameters": {
+                                "domains": [
+                                        "api.open-meteo.com"
+                                ]
+                        }
+                }
+        ],
         "uuid": "a7b9d824-294f-4c63-8437-08fb2472df2a",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "1.0.0"
+    "version": "1.1.0"
 }

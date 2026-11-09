@@ -23,16 +23,22 @@
 //   Bi-Color Flip Dot   #E6E65C -> Icterine,     Platte #2B2B2B -> DarkGray
 //   Monochrome White    #FFFFFF -> White,        Platte #222222 -> DarkGray
 //   Monochrome Inverse  #202020 -> Black,        Platte #D0D0D0 -> LightGray
-#define THEME_COUNT    7
+//   Custom              alle drei Farben frei waehlbar, auch der Bildschirm
+#define THEME_PRESETS  7
+#define THEME_CUSTOM   7        // Index hinter den festen Schemata
+#define THEME_COUNT    8
 #define THEME_DEFAULT  6
 #define COLOR_SCREEN   GColorBlack
+#define CUSTOM_SCREEN_DEFAULT  GColorBlack
+#define CUSTOM_PLATE_DEFAULT   GColorRed
+#define CUSTOM_FG_DEFAULT      GColorYellow
 
 typedef struct {
   GColor fg;
   GColor plate;
 } Theme;
 
-static const Theme THEMES[THEME_COUNT] = {
+static const Theme THEMES[THEME_PRESETS] = {
   { {GColorChromeYellowARGB8}, {GColorDarkGrayARGB8} },
   { {GColorMalachiteARGB8},    {GColorBlackARGB8} },
   { {GColorCyanARGB8},         {GColorOxfordBlueARGB8} },
@@ -111,6 +117,9 @@ typedef struct {
   uint8_t version;
   uint8_t theme;
   uint8_t info_mode;
+  GColor custom_screen;
+  GColor custom_plate;
+  GColor custom_fg;
 } Settings;
 
 static Window *s_window;
@@ -291,6 +300,9 @@ static void settings_defaults(void) {
   s_settings.version = SETTINGS_VERSION;
   s_settings.theme = THEME_DEFAULT;
   s_settings.info_mode = INFO_DATE;
+  s_settings.custom_screen = CUSTOM_SCREEN_DEFAULT;
+  s_settings.custom_plate = CUSTOM_PLATE_DEFAULT;
+  s_settings.custom_fg = CUSTOM_FG_DEFAULT;
 }
 
 static void settings_load(void) {
@@ -383,9 +395,11 @@ static void info_text(struct tm *t, char *buf, size_t len) {
 // ---------------------------------------------------------------------------
 static void canvas_update(Layer *layer, GContext *ctx) {
   GRect b = layer_get_bounds(layer);
-  const Theme *th = &THEMES[s_settings.theme];
+  bool custom = s_settings.theme == THEME_CUSTOM;
+  Theme custom_theme = { s_settings.custom_fg, s_settings.custom_plate };
+  const Theme *th = custom ? &custom_theme : &THEMES[s_settings.theme];
 
-  graphics_context_set_fill_color(ctx, COLOR_SCREEN);
+  graphics_context_set_fill_color(ctx, custom ? s_settings.custom_screen : COLOR_SCREEN);
   graphics_fill_rect(ctx, b, 0, GCornerNone);
 
   time_t now = time(NULL);
@@ -496,6 +510,18 @@ static void inbox_received(DictionaryIterator *iter, void *context) {
     uint8_t mode = (uint8_t)tuple_int(t);
     if (mode != s_settings.info_mode) mode_changed = true;
     s_settings.info_mode = mode;
+    settings_changed = true;
+  }
+  if ((t = dict_find(iter, MESSAGE_KEY_CUSTOM_SCREEN))) {
+    s_settings.custom_screen = GColorFromHEX(tuple_int(t));
+    settings_changed = true;
+  }
+  if ((t = dict_find(iter, MESSAGE_KEY_CUSTOM_PLATE))) {
+    s_settings.custom_plate = GColorFromHEX(tuple_int(t));
+    settings_changed = true;
+  }
+  if ((t = dict_find(iter, MESSAGE_KEY_CUSTOM_FG))) {
+    s_settings.custom_fg = GColorFromHEX(tuple_int(t));
     settings_changed = true;
   }
   bool unit_changed = dict_find(iter, MESSAGE_KEY_TEMP_UNIT) != NULL;

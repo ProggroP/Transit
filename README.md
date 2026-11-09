@@ -1,10 +1,10 @@
 # Transit
 
-*Big tiled digits on coloured plates, like a station display, in seven colour schemes.*
+*Big tiled digits on coloured plates, like a station display, in seven colour schemes or your own.*
 
 <img src="screenshots/shot_emery_transit.png" alt="Emery"> <img src="screenshots/shot_gabbro_transit.png" alt="Gabbro">
 
-A Pebble watchface (v1.0.0) for Pebble Time 2 (emery) and Pebble Round 2 (gabbro).
+A Pebble watchface (v1.1.0) for Pebble Time 2 (emery) and Pebble Round 2 (gabbro).
 
 Transit shows the time as four big characters, each on its own coloured plate:
 two for the hours, two for the minutes. A third line can show the date, today's
@@ -29,6 +29,7 @@ as a fine line between the tiles. There are no image or font resources.
   - Bi-Color Flip Dot - lemon yellow on dark grey.
   - Monochrome White - white on dark grey.
   - Monochrome Inverse - black on light grey.
+- A Custom theme with your own background, plate and character colours.
 - 12 or 24 hour format follows the watch setting; 12 hour mode adds a small
   A or P plate.
 - Layout adapts to the rectangular Emery and the round Gabbro screen.
@@ -36,7 +37,9 @@ as a fine line between the tiles. There are no image or font resources.
 
 ## Settings
 
-- **Colour theme** - one of the seven schemes above.
+- **Colour theme** - one of the seven schemes above, or Custom.
+- **Background, Plates, Digits and letters** - your own colours, shown when the
+  colour theme is Custom.
 - **Third line** - date, steps, heart rate, low/high temperature, or off.
 - **Temperature unit** - automatic (phone region), Celsius or Fahrenheit.
 
@@ -56,6 +59,11 @@ pebble install --emulator gabbro
 
 ## Release notes
 
+### 1.1.0
+
+New Custom colour theme: choose the background, the plates and the digits and
+letters yourself.
+
 ### 1.0.0
 
 First release.
@@ -66,8 +74,12 @@ MIT, see [LICENSE](LICENSE).
 
 ## Status
 
+- v1.1.0: Adds the Custom theme (theme index 7, keys `CUSTOM_SCREEN`,
+  `CUSTOM_PLATE`, `CUSTOM_FG`). `src/pkjs/custom-clay.js` shows the three colour
+  pickers only for that theme. Built with SDK 4.44, with `usesPermissions` for
+  location and Open-Meteo.
 - v1.0.0: Tile glyphs, plates, seven themes, third line with off switch and
-  Clay settings are implemented for emery and gabbro. Published on the
+  Clay settings for emery and gabbro. Published on the
   [Rebble App Store](https://apps.rePebble.com/6b1e297baa0b49d993f715c6).
 - Glyphs are data in `GLYPHS_DIGIT` and `GLYPHS_ALPHA` in `src/c/transit.c`.
   The digit 0 uses the shape of the letter O on purpose, for readability.
